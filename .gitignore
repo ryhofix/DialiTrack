@@ -1,0 +1,24 @@
+# Ignore Gradle files
+.gradle/
+build/
+*/build/
+
+# Ignore IDE settings
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Ignore local properties
+local.properties
+
+# Ignore log files
+*.log
+
+# Ignore generated files
+captures/
+output.json
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
