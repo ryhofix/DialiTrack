@@ -18,25 +18,33 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.exifinterface.media.ExifInterface;
 
-import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.text.TextRecognition;
-import com.google.mlkit.vision.text.TextRecognizer;
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import java.io.IOException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import java.io.InputStream;
+
+import pl.mr.dialitrack.TesseractOcrHelper;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityResultLauncher<Intent> pickImagesLauncher;
     private TextView datesView;
+    private TesseractOcrHelper ocrHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        try {
+            ocrHelper = new TesseractOcrHelper(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -56,6 +64,14 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             pickImagesLauncher.launch(intent);
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (ocrHelper != null) {
+            ocrHelper.release();
+        }
     }
 
     private void handleImagesResult(ActivityResult result) {
@@ -78,38 +94,44 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void readWeightAndDate(Uri uri, StringBuilder builder) {
-        try {
-            InputImage image = InputImage.fromFilePath(this, uri);
-            TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
-            recognizer.process(image)
-                    .addOnSuccessListener(result -> {
-                        String text = result.getText();
-                        Pattern pattern = Pattern.compile("(\\d+[.,]\\d+)");
-                        Matcher matcher = pattern.matcher(text);
-                        String weight = "";
-                        if (matcher.find()) {
-                            try {
-                                double value = Double.parseDouble(matcher.group(1).replace(',', '.'));
-                                int grams = (int) Math.round(value * 1000);
-                                weight = grams + "g";
-                            } catch (NumberFormatException ignored) {
-                            }
-                        }
-                        builder.append(readDateFromExif(uri));
-                        if (!weight.isEmpty()) {
-                            builder.append(" ").append(weight);
-                        }
-                        builder.append("\n");
-                        datesView.setText(builder.toString());
-                    })
-                    .addOnFailureListener(e -> {
-                        builder.append(readDateFromExif(uri)).append("\n");
-                        datesView.setText(builder.toString());
-                    });
+        try (InputStream in = getContentResolver().openInputStream(uri)) {
+            if (in == null) throw new IOException("null stream");
+            Bitmap bitmap = BitmapFactory.decodeStream(in);
+            String text = ocrHelper != null ? ocrHelper.process(bitmap) : "";
+            text = fixDigits(text);
+            Pattern pattern = Pattern.compile("(\\d+[.,]\\d+)");
+            Matcher matcher = pattern.matcher(text);
+            String weight = "";
+            if (matcher.find()) {
+                try {
+                    float value = Float.parseFloat(matcher.group(1).replace(',', '.'));
+                    int grams = Math.round(value * 1000f);
+                    weight = grams + "g";
+                } catch (NumberFormatException ignored) {
+                }
+            }
+            builder.append(readDateFromExif(uri));
+            if (!weight.isEmpty()) {
+                builder.append(" ").append(weight);
+            }
+            builder.append("\n");
+            datesView.setText(builder.toString());
         } catch (Exception e) {
             builder.append(readDateFromExif(uri)).append("\n");
             datesView.setText(builder.toString());
         }
+    }
+
+    private String fixDigits(String text) {
+        if (text == null) return "";
+        return text.replace('e', '2')
+                .replace('B', '8')
+                .replace('O', '0')
+                .replace('o', '0')
+                .replace('I', '1')
+                .replace('l', '1')
+                .replace('S', '5')
+                .replace('s', '5');
     }
 
     private String readDateFromExif(Uri uri) {
