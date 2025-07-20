@@ -19,9 +19,9 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.exifinterface.media.ExifInterface;
 
 import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
     private void readWeightAndDate(Uri uri, StringBuilder builder) {
         try {
             InputImage image = InputImage.fromFilePath(this, uri);
-            TextRecognizer recognizer = TextRecognition.getClient();
+            TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
             recognizer.process(image)
                     .addOnSuccessListener(result -> {
                         String text = result.getText();
