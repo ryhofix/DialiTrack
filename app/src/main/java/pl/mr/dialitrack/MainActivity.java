@@ -7,6 +7,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResult;
@@ -27,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import java.io.InputStream;
+import java.io.IOException;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityResultLauncher<Intent> pickImagesLauncher;
@@ -56,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             pickImagesLauncher.launch(intent);
         });
+
+        recognizeTextFromAsset();
     }
 
     private void handleImagesResult(ActivityResult result) {
@@ -123,6 +129,19 @@ public class MainActivity extends AppCompatActivity {
             return date != null ? date : "";
         } catch (Exception e) {
             return "";
+        }
+    }
+
+    private void recognizeTextFromAsset() {
+        try (InputStream is = getAssets().open("waga.jpg")) {
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            InputImage image = InputImage.fromBitmap(bitmap, 0);
+            TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+            recognizer.process(image)
+                    .addOnSuccessListener(result -> Log.d("MainActivity", "Recognized text: " + result.getText()))
+                    .addOnFailureListener(e -> Log.e("MainActivity", "Failed to recognize text", e));
+        } catch (IOException e) {
+            Log.e("MainActivity", "Failed to load asset", e);
         }
     }
 }
