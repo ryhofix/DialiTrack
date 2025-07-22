@@ -36,6 +36,7 @@ dependencies {
     implementation libs.constraintlayout
     implementation libs.exif
     implementation libs.mlkit.text.recognition
+    implementation libs.opencv.android
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
