@@ -2,9 +2,11 @@ package pl.mr.dialitrack;
 
 import android.app.Activity;
 import android.content.ClipData;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -64,6 +66,11 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             pickImagesLauncher.launch(intent);
         });
+        try {
+            x();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -147,4 +154,22 @@ public class MainActivity extends AppCompatActivity {
             return "";
         }
     }
+
+    private void x() throws IOException {
+        OcrSevenSegmentHelper ocrHelper = new OcrSevenSegmentHelper(this);
+        Bitmap bitmap = loadTestImageFromAssets(this, "tensorflow/waga1.jpg");
+
+        String wynik = ocrHelper.predict(bitmap);
+        Log.d("OCR_RESULT", "Rozpoznana waga: " + wynik);
+    }
+
+    public Bitmap loadTestImageFromAssets(Context context, String fileName) {
+        try (InputStream is = context.getAssets().open(fileName)) {
+            return BitmapFactory.decodeStream(is);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 }

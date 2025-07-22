@@ -37,6 +37,8 @@ dependencies {
     implementation libs.exif
     implementation libs.mlkit.text.recognition
     implementation 'com.rmtheis:tess-two:9.1.0'
+    implementation 'org.tensorflow:tensorflow-lite:2.11.0'
+    implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.11.0' // DODAJ TO
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
