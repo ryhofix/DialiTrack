@@ -8,6 +8,7 @@ material = "1.10.0"
 activity = "1.8.0"
 constraintlayout = "2.1.4"
 exif = "1.3.6"
+opencv = "4.8.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -19,6 +20,7 @@ activity = { group = "androidx.activity", name = "activity", version.ref = "acti
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 exif = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exif" }
 mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition", version = "16.0.0" }
+opencv-android = { group = "org.opencv", name = "opencv-android", version.ref = "opencv" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
